@@ -1,7 +1,15 @@
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import type { ReactElement } from "react";
 
 import { PermissionDenied } from "@/components/permission-denied";
+import { currentPathRequestHeaderName } from "@/lib/local-redirect-path";
+
+// ############################################################################
+// # PUBLIC API
+// # Exported. Pages and Server Actions import these: renaming one, changing a
+// # parameter or changing what a function returns breaks its callers.
+// ############################################################################
 
 /** What a form built with useActionState shows after its Server Action fails. */
 export type FormState<FieldName extends string> = {
@@ -9,16 +17,29 @@ export type FormState<FieldName extends string> = {
   fieldErrors: Partial<Record<FieldName, string>>;
 };
 
-const genericFormErrorMessage = "No se pudo guardar. Revisa los datos e intenta de nuevo.";
-
 /**
- * For Server Components, after checking `!response.ok`.
- * Call it outside any try/catch: notFound() works by throwing, and a catch would swallow it.
+ * For Server Components, after checking `!response.ok`:
+ * `if (!response.ok) return await renderApiErrorForPage(response);`
+ * Call it outside any try/catch: notFound() and redirect() work by throwing, and a catch would
+ * swallow them.
+ * Returns <PermissionDenied /> for a 403. It never returns for the rest: a 401 redirects through
+ * /salir, a 404 calls notFound(), and any other status throws an Error.
  */
-export function renderApiErrorForPage(response: Response): ReactElement {
+export async function renderApiErrorForPage(response: Response): Promise<ReactElement> {
+  if (response.status === 401) await redirectToEndExpiredSession();
   if (response.status === 404) notFound();
   if (response.status === 403) return <PermissionDenied />;
   throw new Error(`La API respondió ${response.status}.`);
+}
+
+/**
+ * The API rejected the token while rendering: send the user through /salir, which deletes the
+ * cookies, and back to this page after logging in again.
+ * Never returns: it redirects, so call it outside any try/catch.
+ */
+export async function redirectToEndExpiredSession(): Promise<never> {
+  const currentPath = (await headers()).get(currentPathRequestHeaderName) ?? "/";
+  redirect(`/salir?next=${encodeURIComponent(currentPath)}`);
 }
 
 /**
@@ -55,6 +76,13 @@ export function formStateFromApiError<FieldName extends string>(
     fieldErrors,
   };
 }
+
+// ############################################################################
+// # INTERNAL
+// # Not exported. Only this file uses them: change freely.
+// ############################################################################
+
+const genericFormErrorMessage = "No se pudo guardar. Revisa los datos e intenta de nuevo.";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
