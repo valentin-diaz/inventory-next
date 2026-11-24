@@ -1,8 +1,17 @@
 import "server-only";
 
+import { cookies } from "next/headers";
 import createClient from "openapi-fetch";
 
+import { accessTokenCookieName } from "@/lib/session";
+
 import type { paths } from "./schema";
+
+// ############################################################################
+// # PUBLIC API
+// # Exported. Pages, Server Actions and the proxy import these: renaming one,
+// # changing a parameter or changing what a function returns breaks its callers.
+// ############################################################################
 
 /**
  * Creates a typed client for the Inventario API.
@@ -23,4 +32,15 @@ export function createApiClient(accessToken?: string) {
     baseUrl: apiUrl,
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
+}
+
+/**
+ * The client for whoever made this request, with the access token from their cookie.
+ * The proxy has already refreshed it, so this is the token the API should accept.
+ * Returns the same typed client as `createApiClient`; without the cookie it sends no token and
+ * the API answers 401. Reads cookies, so call it inside <Suspense> (or in a Server Function).
+ */
+export async function createApiClientForCurrentRequest() {
+  const cookieStore = await cookies();
+  return createApiClient(cookieStore.get(accessTokenCookieName)?.value);
 }

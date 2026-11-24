@@ -786,7 +786,7 @@ Qué notar:
 
 **Verify:**
 - `npm run lint` y `npm run build` pasan. El paso 6 usa estas funciones.
-- **Prueba temporal del caso 401.** En el `app/page.tsx` de hoy, agrega un componente dentro del `<Suspense>` que haga `await getCurrentUser()` y muestre el email. Con sesión, se ve el email. Desactiva tu usuario de prueba desde el admin de Django y recarga: terminas en `/login?next=%2F` sin cookies. Vuelve a activarlo y borra la prueba.
+- **Prueba temporal del caso 401.** En el `app/page.tsx` de hoy, agrega un componente dentro del `<Suspense>` que haga `await getCurrentUser()` y muestre el email. Con sesión, se ve el email. Desactiva tu usuario de prueba desde el admin de Django y recarga: terminas en `/login` sin cookies y sin `next`, porque `/salir` no agrega `next` cuando vale `/` (el destino por defecto). Con otra ruta, por ejemplo `/?x=1`, sí lo conserva. Vuelve a activarlo y borra la prueba.
 
 **Suggested commit name:** `feat: add data access layer for the current user`
 
