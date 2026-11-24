@@ -5,8 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { LoginForm } from "./login-form";
 
+// ############################################################################
+// # ENTRY POINT
+// # Next.js reads these two exports by convention for the /login route; no other
+// # file of ours imports them. Nothing in this file is internal.
+// ############################################################################
+
+/** Tab title for /login. Read by Next.js. */
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
+/** The /login page. Takes no props and returns the page's JSX. */
 export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">

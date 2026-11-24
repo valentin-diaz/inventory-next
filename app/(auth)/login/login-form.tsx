@@ -9,8 +9,21 @@ import { Label } from "@/components/ui/label";
 
 import { logInWithEmailAndPassword, type LoginFormState } from "./actions";
 
-const initialLoginFormState: LoginFormState = { message: null, email: "" };
+// ############################################################################
+// # BOUNDARY: "use client"
+// # This file ships to the browser. Props, state and anything imported here are
+// # visible to the user: no secrets, no server-only modules.
+// ############################################################################
 
+// ############################################################################
+// # PUBLIC API
+// # Exported. page.tsx imports it: changing its props changes how the page uses it.
+// ############################################################################
+
+/**
+ * The login form. Takes no props; reads `?next=` from the URL (so it must render inside
+ * <Suspense>) and shows the error message the Server Action returns.
+ */
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [state, formAction, isPending] = useActionState(
@@ -48,3 +61,10 @@ export function LoginForm() {
     </form>
   );
 }
+
+// ############################################################################
+// # INTERNAL
+// # Not exported. Only this file uses them: change freely.
+// ############################################################################
+
+const initialLoginFormState: LoginFormState = { message: null, email: "" };
