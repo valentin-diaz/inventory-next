@@ -1,3 +1,5 @@
+import { logOut } from "@/app/(app)/actions";
+import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { roleNames, spanishNameOrCode } from "@/lib/labels";
 
@@ -8,8 +10,9 @@ import { roleNames, spanishNameOrCode } from "@/lib/labels";
 // ############################################################################
 
 /**
- * The sidebar footer: the user's name (or email if they have none) and their role in Spanish, or
- * "Sin rol asignado". Takes no props.
+ * The sidebar footer: the user's name (or email if they have none), their role in Spanish (or
+ * "Sin rol asignado") and the "Cerrar sesión" button, a form that submits the `logOut` Server
+ * Action. Takes no props.
  * Async Server Component: it reads the user, so render it inside <Suspense>.
  */
 export async function UserMenu() {
@@ -23,6 +26,11 @@ export async function UserMenu() {
         <p className="truncate text-sm font-medium">{fullName}</p>
         <p className="text-xs text-muted-foreground">{roleName}</p>
       </div>
+      <form action={logOut}>
+        <Button type="submit" variant="outline" size="sm" className="w-full">
+          Cerrar sesión
+        </Button>
+      </form>
     </div>
   );
 }
