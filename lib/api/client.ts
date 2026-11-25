@@ -31,6 +31,7 @@ export function createApiClient(accessToken?: string) {
   return createClient<paths>({
     baseUrl: apiUrl,
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    fetch: fetchWithContentLength,
   });
 }
 
@@ -43,4 +44,29 @@ export function createApiClient(accessToken?: string) {
 export async function createApiClientForCurrentRequest() {
   const cookieStore = await cookies();
   return createApiClient(cookieStore.get(accessTokenCookieName)?.value);
+}
+
+// ############################################################################
+// # INTERNAL
+// # Not exported. Only this file uses it: change freely.
+// ############################################################################
+
+/**
+ * `fetch` for openapi-fetch: sends a request that has a body with `Content-Length`.
+ *
+ * openapi-fetch calls fetch with a `Request`, and Next.js's patched fetch rebuilds it from its
+ * body stream, so it can go out as `Transfer-Encoding: chunked`. Django reads a body without
+ * `Content-Length` as empty and answers 400. Reading the body first and passing the URL and the
+ * bytes keeps its length known. Requests without a body go through unchanged.
+ */
+async function fetchWithContentLength(request: Request): Promise<Response> {
+  if (!request.body) return fetch(request);
+
+  return fetch(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: await request.arrayBuffer(),
+    redirect: request.redirect,
+    signal: request.signal,
+  });
 }
