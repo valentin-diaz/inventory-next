@@ -25,7 +25,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. The home page says "API conectada" when it can reach the API.
+Open http://localhost:3000 and sign in. The API's `manage.py seed` creates a demo account for each role (see "Demo data" in its README).
 
 ## Environment variables
 
@@ -47,10 +47,19 @@ Open http://localhost:3000. The home page says "API conectada" when it can reach
 
 | Concept | Where to look |
 | --- | --- |
-| Server Component fetching data, streamed behind `<Suspense>` (Cache Components) | `app/page.tsx` |
+| Server Component fetching data, streamed behind `<Suspense>` (Cache Components) | `HomeGreeting` in `app/(app)/page.tsx` |
 | Root layout, `metadata` with `title.template`, `lang` | `app/layout.tsx` |
 | Client Component rendered from a Server layout | `<Toaster />` in `app/layout.tsx`, `components/ui/sonner.tsx` |
 | Server-only environment variables (no `NEXT_PUBLIC_`), `import "server-only"` | `lib/api/client.ts`, `.env.example` |
 | Typed API client generated from OpenAPI | `lib/api/schema.d.ts`, `lib/api/client.ts` |
 | `notFound()`; expected errors rendered, unexpected errors thrown | `renderApiErrorForPage` in `lib/api/errors.tsx` |
 | Errors as return values for `useActionState` forms | `formStateFromApiError` in `lib/api/errors.tsx` |
+| Proxy: refreshing tokens, writing cookies on the request and the response, redirects | `proxy.ts` |
+| Route groups: pages with and without the shell | `app/(auth)/`, `app/(app)/` |
+| Server Action that sets cookies and redirects; `useActionState` form | `app/(auth)/login/actions.ts`, `app/(auth)/login/login-form.tsx` |
+| Server Action that deletes cookies (and invalidates the Client Cache) | `logOut` in `app/(app)/actions.ts` |
+| Route Handler that deletes cookies (pages can't) | `app/(auth)/salir/route.ts` |
+| Data Access Layer with React `cache()` | `lib/auth.ts` |
+| Passing data from Proxy to Server Components through a request header | `x-current-path` in `proxy.ts` and `lib/api/errors.tsx` |
+| Static shell with the user's data behind `<Suspense>` | `app/(app)/layout.tsx`, `components/app-sidebar.tsx` |
+| `error.tsx` with `retry`, root `not-found.tsx`, `loading.tsx` | `app/error.tsx`, `app/not-found.tsx`, `app/(app)/loading.tsx` |

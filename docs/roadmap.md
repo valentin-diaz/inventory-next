@@ -427,6 +427,13 @@ The frontend needs none of these, but each would help:
   The anonymous limit (100 an hour) covers every login and token refresh. Each user is limited to
   1000 requests an hour, and a dashboard makes several API calls per page load. If you hit 429
   while developing, raise the rates in `dev.py`.
+  The login limit (10 a minute, `throttle_scope = "auth"`) is shared the same way: after ten
+  login attempts in a minute, from any number of people, everyone gets 429. A fix has two halves.
+  Next.js sends the browser's IP in `X-Forwarded-For`; it keeps whatever header the browser sent,
+  so a reverse proxy in front of it has to write the real address. And the API reads that header
+  only when the request comes from the Next.js server, in throttle classes that override
+  `get_ident`. DRF's `NUM_PROXIES` isn't enough: it picks an address from the header without
+  checking who sent it.
 - **The store's time zone in movement responses.** Adding `timezone` to `StoreSummarySerializer`
   would save the frontend a lookup.
 
